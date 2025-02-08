@@ -102,8 +102,7 @@ This repository contains **6 practical experiments** from a **15-experiment educ
 
 ---  
 
-## 📸 Educational Kit Images (Placeholder)  
-*Images of the kit will be added soon. Check back later!*  
+## 📸 Educational Kit Images
 
 ![Kit Overview](https://github.com/Ziad-Abaza/Microcontroller-Learning-Kit/blob/main/screenshots/Kit_overview_2.jpg)  
 ![Inside the Kit](https://github.com/Ziad-Abaza/Microcontroller-Learning-Kit/blob/main/screenshots/Kit_overview_3.jpg)  
