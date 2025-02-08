@@ -1,126 +1,108 @@
-/**
- * ESP32 Smart Irrigation System
- * --------------------------------
- * This system monitors soil moisture using a sensor and controls a water pump 
- * to maintain optimal moisture levels. The moisture level is displayed on an 
- * OLED screen, and the pump is automatically activated if the soil is too dry.
- *
- * Components:
- * - ESP32
- * - Soil Moisture Sensor
- * - MOSFET for Pump Control
- * - SSD1306 OLED Display
- *
- * Functionality:
- * - Reads moisture sensor data
- * - Displays the moisture level on an OLED screen
- * - Turns ON the pump if the moisture level is below a threshold
- * - Turns OFF the pump after a set duration
- */
+/*
+   ********************************************
+   *  RFID-Based Access Control System  *
+   ********************************************
 
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+   This code is designed to control access using an RFID card. 
+   It reads the UID of an RFID card and checks if it matches a predefined UID.
+   If the UID is authorized, access is granted by unlocking a lock for 5 seconds.
+   Otherwise, access is denied.
 
-// Pin definitions
-#define MOISTURE_SENSOR_PIN  13  // Analog pin for soil moisture sensor
-#define PUMP_CONTROL_PIN     19  // Digital pin for MOSFET controlling the pump
+   Components Used:
+   - MFRC522 RFID module (SPI communication)
+   - 16x2 LCD display (LiquidCrystal library)
+   - An electric lock controlled via digital output (A0)
 
-// Threshold values
-#define MOISTURE_THRESHOLD   40  // Moisture percentage below which the pump activates
-#define PUMP_ON_TIME         3000 // Pump activation duration in milliseconds (3 sec)
+   Functionality:
+   - Reads an RFID card's UID using MFRC522.
+   - Displays the UID on an LCD screen.
+   - If the UID matches the predefined target UID, the lock is unlocked.
+   - If the UID does not match, access is denied.
+   - The lock re-locks automatically after 5 seconds.
+*/
 
-// OLED display settings
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_RESET    -1
-#define OLED_I2C_ADDRESS 0x3C  // Default I2C address for SSD1306
+#include <LiquidCrystal.h>
+#include <SPI.h>
+#include <MFRC522.h>
 
-// Initialize OLED display
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+// LCD pin configuration
+const int RS = 7, EN = 2, DB4 = 3, DB5 = 4, DB6 = 5, DB7 = 6;
+LiquidCrystal lcd(RS, EN, DB4, DB5, DB6, DB7);
 
-/**
- * Initializes the system:
- * - Configures pump control pin
- * - Initializes serial communication
- * - Sets up the OLED display
- */
+// MFRC522 RFID module pin configuration
+#define RST_PIN 9  // Reset pin
+#define SS_PIN 10  // Slave select pin
+
+MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
+
+// Predefined authorized UID
+byte targetUID[] = {0xEF, 0xD0, 0x70, 0x1E};
+
+// Lock control pin
+int lockPin = A0;
+
 void setup() {
-    pinMode(PUMP_CONTROL_PIN, OUTPUT);
-    digitalWrite(PUMP_CONTROL_PIN, LOW); // Ensure the pump is OFF at startup
+  Serial.begin(9600);  // Initialize serial communication
+  lcd.begin(16, 2);    // Initialize the LCD
+  
+  // Display waiting message
+  lcd.clear();
+  lcd.print("Waiting for RFID...");
+  
+  SPI.begin();         // Initialize SPI for RFID module
+  mfrc522.PCD_Init();  // Initialize MFRC522
+  
+  pinMode(lockPin, OUTPUT);
+  digitalWrite(lockPin, LOW);  // Keep the lock closed by default
+}
 
-    Serial.begin(115200);
-    Serial.println("🌱 ESP32 Smart Irrigation System Initialized...");
-
-    // Initialize OLED display
-    if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDRESS)) {
-        Serial.println(F("SSD1306 allocation failed!"));
-        for (;;); // Halt execution if OLED initialization fails
+void loop() {
+  // Check if a new RFID card is present
+  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+    Serial.print("UID: ");
+    
+    // Print and display the UID
+    lcd.clear();
+    lcd.print("UID: ");
+    
+    for (byte i = 0; i < mfrc522.uid.size; i++) {
+      Serial.print(mfrc522.uid.uidByte[i], HEX);
+      Serial.print(" ");
+      lcd.print(mfrc522.uid.uidByte[i], HEX);
+      lcd.print(" ");
     }
     
-    display.display();
-    delay(2000); // Allow time for OLED setup
-    display.clearDisplay();
-}
+    Serial.println();
 
-/**
- * Reads soil moisture level and converts it to a percentage.
- * @return int - Moisture level in percentage (0-100)
- */
-int getSoilMoisture() {
-    int moistureValue = analogRead(MOISTURE_SENSOR_PIN);
-    return map(moistureValue, 0, 4095, 100, 0); // Convert raw value to percentage
-}
+    // Check if the UID matches the authorized UID
+    if (isTargetUID(mfrc522.uid.uidByte)) {
+      Serial.println("Access Granted!");
+      lcd.setCursor(0, 1);
+      lcd.print("Access Granted!");
 
-/**
- * Displays the current moisture level on the OLED screen.
- * @param moisturePercent - Current soil moisture percentage
- */
-void displayMoistureLevel(int moisturePercent) {
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
-    display.print("🌿 Moisture Level: ");
-    display.print(moisturePercent);
-    display.println("%");
-}
-
-/**
- * Controls the pump based on soil moisture level.
- * @param moisturePercent - Current soil moisture percentage
- */
-void controlPump(int moisturePercent) {
-    if (moisturePercent < MOISTURE_THRESHOLD) {
-        display.setCursor(0, 10);
-        display.println("⚠️ Soil is dry! Turning ON the pump...");
-        digitalWrite(PUMP_CONTROL_PIN, HIGH); // Activate the pump
-        delay(PUMP_ON_TIME);
-        digitalWrite(PUMP_CONTROL_PIN, LOW); // Turn OFF the pump
-        display.setCursor(0, 20);
-        display.println("✅ Pump turned OFF.");
+      digitalWrite(lockPin, HIGH);  // Unlock the door
+      
+      delay(5000);  // Keep the lock open for 5 seconds
+      
+      digitalWrite(lockPin, LOW);  // Lock the door again
     } else {
-        display.setCursor(0, 10);
-        display.println("✅ Soil moisture is sufficient.");
+      Serial.println("Access Denied.");
+      lcd.setCursor(0, 1);
+      lcd.print("Access Denied.");
     }
-
-    display.display();
+    
+    // Stop reading the card
+    mfrc522.PICC_HaltA();
+    mfrc522.PCD_StopCrypto1();
+  }
 }
 
-/**
- * Main loop: Reads moisture level, displays it, and controls the pump.
- */
-void loop() {
-    int moisturePercent = getSoilMoisture(); // Get soil moisture level
-
-    displayMoistureLevel(moisturePercent); // Show moisture level on OLED
-    controlPump(moisturePercent); // Check if pump needs to be activated
-
-    // Print moisture level to Serial Monitor
-    Serial.println("-------------------------------");
-    Serial.print("Moisture Level: ");
-    Serial.print(moisturePercent);
-    Serial.println("%");
-
-    delay(5000); // Wait 5 seconds before next reading
+// Function to check if the scanned UID matches the predefined UID
+bool isTargetUID(byte* uid) {
+  for (byte i = 0; i < sizeof(targetUID); i++) {
+    if (uid[i] != targetUID[i]) {
+      return false;
+    }
+  }
+  return true;
 }
