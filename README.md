@@ -3,8 +3,8 @@
 ## 📖 Project Overview  
 **University:** Burj Al Arab University of Technology  
 **Course:** Microprocessors (3rd Year)  
-**Supervisor:** Dr. Osama Al-Nahhas (Head of IT Department)  
-**Collaborator:** Mazen Gomaa ([GitHub Repository](https://github.com/Mazen-Gomaa/intro-to-embedded-systems-practical-experiments.git))  
+**Supervisor:** Prof. Assoc. Osama Al-Nahhas (Head of IT Department)  
+**Hardware Contribution:** PCB'n Chill ([GitHub Repository](https://github.com/Mazen-Gomaa/intro-to-embedded-systems-practical-experiments.git))  
 
 This repository contains **6 practical experiments** from a **15-experiment educational kit** designed for embedded systems learning. Each experiment includes **code, schematics, 3D models, and documentation** to facilitate hands-on experience.  
 
@@ -110,10 +110,10 @@ This repository contains **6 practical experiments** from a **15-experiment educ
 ---  
 
 ## 🙏 Acknowledgments  
-- **Collaborator:** [Mazen Gomaa](https://github.com/Mazen-Gomaa) for contributing complementary experiments.  
-- **Supervisor:** Dr. Osama Al-Nahhas for his guidance and expertise.  
+- **Hardware Contribution:** [PCB'n Chill](https://github.com/Mazen-Gomaa) for contributing complementary experiments.  
+- **Supervisor:** Prof. Assoc. Osama Al-Nahhas for his guidance and expertise.  
 
 ---  
 
 ## 🔗 Additional Resources  
-For the full **15-experiment educational kit**, visit [Mazen Gomaa's Repository](https://github.com/Mazen-Gomaa/intro-to-embedded-systems-practical-experiments.git).  
+For the full **15-experiment educational kit**, visit [PCB'n Chill Repository](https://github.com/Mazen-Gomaa/intro-to-embedded-systems-practical-experiments.git).  
