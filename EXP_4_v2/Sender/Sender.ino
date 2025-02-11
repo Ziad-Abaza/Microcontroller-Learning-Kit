@@ -17,7 +17,7 @@ typedef struct struct_message {
 struct_message sensorData;
 
 esp_now_peer_info_t peerInfo;
-uint8_t receiverMacAddress[] = {0xEC, 0x62, 0x60, 0xA1, 0xA2, 0x38};  // Correct MAC address of the receiver
+uint8_t receiverMacAddress[] = {0x08, 0x3A, 0xF2, 0xB7, 0x23, 0x74}; 
 
 void onDataSent(const uint8_t *macAddr, esp_now_send_status_t status) {
     Serial.print("📡 Send Status: ");
